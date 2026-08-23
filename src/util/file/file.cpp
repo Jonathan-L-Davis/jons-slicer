@@ -1,0 +1,180 @@
+#include "file.h"
+
+#include <cstdio>
+#include <filesystem>
+
+std::vector<uint8_t> load_file(std::string file_path){
+    std::vector<uint8_t> retMe;
+    if( !std::filesystem::exists(file_path)||!std::filesystem::is_regular_file(file_path) ) return {};
+    int64_t file_size = std::filesystem::file_size(file_path);
+    
+    // using the C api because windows likes to insert carriage returns, even in binary mode.
+    FILE* file = fopen(file_path.c_str(),"rb");
+    if(file==NULL) return {};
+    retMe.resize(file_size);
+    
+    for( int64_t bytes_read = 0; bytes_read < file_size && !std::feof(file); bytes_read += std::fread((char*)retMe.data()+bytes_read,1,file_size,file) );
+    
+    // return empty object on error/incomplete file read. Don't want to deal with half reading in a file.
+    if(file_size!=retMe.size())
+        retMe = {};
+    
+    fclose(file);
+    
+    return retMe;
+}
+
+bool save_file(std::string file_path, const std::vector<uint8_t>& data){
+        FILE* file = fopen(file_path.c_str(),"wb");
+        
+        if(file==NULL) return false;
+        
+        std::size_t d = fwrite((char*)data.data(),1,data.size(),file);
+        
+        fclose(file);
+        
+        return data.size()==d;// technically not the most robust way to save files. Could also use a forloop, which would be proper, but ehh.
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, uint8_t x){
+    file.push_back(x>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, uint16_t x){
+    file.push_back(x>>8);
+    file.push_back(x>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, uint32_t x){
+    file.push_back(x>>24);
+    file.push_back(x>>16);
+    file.push_back(x>>8);
+    file.push_back(x>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, uint64_t x){
+    file.push_back(x>>56);
+    file.push_back(x>>48);
+    file.push_back(x>>40);
+    file.push_back(x>>32);
+    file.push_back(x>>24);
+    file.push_back(x>>16);
+    file.push_back(x>>8);
+    file.push_back(x>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, float x){
+    uint32_t y = *(uint32_t*)&x;
+    file.push_back(y>>24);
+    file.push_back(y>>16);
+    file.push_back(y>>8);
+    file.push_back(y>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, double x){
+    uint64_t y = *(uint64_t*)&x;
+    file.push_back(y>>56);
+    file.push_back(y>>48);
+    file.push_back(y>>40);
+    file.push_back(y>>32);
+    file.push_back(y>>24);
+    file.push_back(y>>16);
+    file.push_back(y>>8);
+    file.push_back(y>>0);
+}
+
+void append_to_buffer(std::vector<uint8_t>& file, std::string x){
+    uint32_t size = x.size();
+    append_to_buffer(file,size);
+    for(int i = 0; i < size; i++){
+        uint8_t b = x[i];
+        append_to_buffer(file,b);
+    }
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, uint8_t& x){
+    if(file.size()<=i+0) return;
+    
+    x = 0;
+    
+    x |= file[i]; i++;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, uint16_t& x){
+    if(file.size()<=i+1) return;
+    
+    x = 0;
+    
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, uint32_t& x){
+    if(file.size()<=i+3) return;
+    
+    x = 0;
+    
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, uint64_t& x){
+    if(file.size()<=i+7) return;
+    
+    x = 0;
+    
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+    x <<= 8; x |= file[i]; i++;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, float& x){
+    if(file.size()<=i+3) return;
+    
+    x = 0;
+    
+    uint32_t y = *(uint32_t*)&x;
+    
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    
+    x = *(float*)&y;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, double& x){
+    if(file.size()<=i+7) return;
+    
+    x = 0;
+    
+    uint64_t y = *(uint64_t*)&x;
+    
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    y <<= 8; y |= file[i]; i++;
+    
+    x = *(double*)&y;
+}
+
+void read_from_buffer(const std::vector<uint8_t>& file, int& i, std::string& x){
+    uint32_t size = 0;
+    read_from_buffer(file,i,size);
+    for(int j = 0; j < size; j++){
+        uint8_t b = 0;
+        read_from_buffer(file,i,b);
+        x.push_back(b);
+    }
+}

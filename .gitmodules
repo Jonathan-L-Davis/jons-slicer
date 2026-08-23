@@ -1,0 +1,6 @@
+[submodule "lib/Clipper2"]
+	path = lib/Clipper2
+	url = ../Clipper2/
+[submodule "lib/lib3mf"]
+	path = lib/lib3mf
+	url = ../lib3mf/

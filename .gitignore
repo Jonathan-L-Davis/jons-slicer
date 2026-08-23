@@ -1,0 +1,10 @@
+/*
+!.gitignore
+!.gitmodules
+!src/
+!lib/
+
+!build.sh
+!README.md
+!LICENSE.md
+!CONTRIBUTING.md
