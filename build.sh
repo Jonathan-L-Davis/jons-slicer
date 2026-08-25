@@ -4,6 +4,7 @@ Executable="jons-slicer"
 Jons_Slicer_Core_Source=(
     "main.cpp"
     
+    "math/math.cpp" "math/geom.cpp"
     "util/file/file.cpp"
 )
 # Yes, there's some common logic between building these libraries, but the pathing changes a little and it's not worth having some generic path processing IMO. ( cmake args also fluctuate)
