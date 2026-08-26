@@ -12,6 +12,18 @@ struct vector{
     float x,y,z;
 };
 
+struct point2{
+    float x,y;
+};
+
+struct vec2{
+    float x,y;
+};
+
+
+point operator + (vector a, point b);
+point operator + (point a, vector b);
+
 vector operator - (point a, point b);
 
 vector cross(vector a, vector b);

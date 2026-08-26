@@ -2,6 +2,19 @@
 
 float inf = INFINITY;
 
+
+
+point operator + (point a, vector b){
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    return a;
+}
+
+point operator + (vector a, point b){
+    return b+a;
+}
+
 vector operator - (point a, point b){
     return {a.x-b.x,a.y-b.y,a.z-b.z};
 }
