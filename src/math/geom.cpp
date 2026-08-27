@@ -76,7 +76,7 @@ bool load(std::string filename,std::vector<mesh>& retMe){
     retMe.reserve(num_obj);
     
     objIter = model->GetObjects();
-    for(int i = 0;objIter->MoveNext();i++){
+    for(;objIter->MoveNext();){
         Lib3MF::PObject obj = objIter->GetCurrentObject();
         if(!obj->IsMeshObject()||!obj->IsValid())// skip processing for invalid or non mesh object
             continue;
@@ -98,8 +98,8 @@ slice slice_mesh(const mesh& sliceMe, float layer_height){
         t = t+offset;
         
         /** find first segment on triangle, then create them above every layer height. Need to workout the projection with the xy plane. **/
-        int start_layer = std::round(t.p[0].z/layer_height);// assuming we don't go above 2 billion layers.
-        int end_layer = ;
+        int start_layer = std::ceil(t.p[0].z/layer_height);// assuming we don't go above 2 billion layers.
+        int end_layer = std::floor(t.p[2].z/layer_height);
         
         float start_height = start_layer*layer_height; // don't like this because you can end up below the triangle, but dealing with it for now.
         

@@ -30,3 +30,5 @@ vector cross(vector a, vector b);
 
 vector get_normal(point a, point b, point c);
 
+float epsilon(float);
+

@@ -30,3 +30,28 @@ vector get_normal(point a, point b, point c){
     return cross(x1,x2);
 }
 
+float epsilon(float input){
+    union{
+        uint32_t fixMe;
+        float retMe;
+    };
+    
+    retMe = input;
+    
+    uint32_t e = (fixMe>>23)&0xFF;
+    uint32_t b = 0;
+    
+    if( e>23 ){
+        e -= 23;
+        b = 0;
+    }else{
+        
+        if(e==0) b = 1;
+        else b = 1<<(e-1);
+    }
+    
+    fixMe = (e<<23) | (b&0x7F'FFFF);
+    
+    return retMe;
+}
+
