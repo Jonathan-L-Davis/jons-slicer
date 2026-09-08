@@ -1,7 +1,8 @@
 #include "math/geom.h"
 #include "common.h"
 
-
+#include <limits>
+#include <assert.h>
 
 tri operator + (tri a, vector b){
     for(int i = 0; i < 3; i++) a.p[i] = a.p[i] + b;
@@ -35,9 +36,10 @@ mesh read_object(const Lib3MF::PObject&  obj, const Lib3MF::PModel& model){// ha
             new_tri.p[i].z = p.m_Coordinates[2];
             
             min.x = std::min(min.x,new_tri.p[i].x); max.x = std::min(max.x,new_tri.p[i].x);
-            min.x = std::min(min.y,new_tri.p[i].y); max.x = std::min(max.y,new_tri.p[i].y);
-            min.x = std::min(min.z,new_tri.p[i].z); max.x = std::min(max.z,new_tri.p[i].z);
+            min.y = std::min(min.y,new_tri.p[i].y); max.y = std::min(max.y,new_tri.p[i].y);
+            min.z = std::min(min.z,new_tri.p[i].z); max.z = std::min(max.z,new_tri.p[i].z);
         }
+        
         new_tri.normal = get_normal(new_tri.p[0],new_tri.p[1],new_tri.p[2]);
         
         // EXTREMELY IMPORTANT - sorting the points by height is an important invariant for our slicing algorithm.
@@ -70,7 +72,7 @@ bool load(std::string filename,std::vector<mesh>& retMe){
     Lib3MF::PObjectIterator objIter = model->GetObjects();
     uint64_t num_obj = 0;// if this overflows, I'd like to talk to you. That's quite a large file system you've got there. (nevermind the fact that it takes a few hundred years to run that many increment instructions lol)
     
-    for (;objIter->MoveNext();num_obj++);
+    for (;objIter->MoveNext();num_obj++);// if you're frozen here, damn. (either means EXTREMELY large file, or lib3MF generated a cycle in it's objIter, which shouldn't happen.)
     
     retMe.resize(0);
     retMe.reserve(num_obj);
@@ -89,6 +91,30 @@ bool load(std::string filename,std::vector<mesh>& retMe){
     return true;
 }
 
+std::vector<point2> yuh(point a, point b, float layer_height){
+    std::vector<point2> retMe;
+    
+    int start_layer = std::ceil(a.z/layer_height);
+    int end_layer = std::floor(b.z/layer_height);
+    
+    vector ba = b-a;
+    
+    for(int layer = start_layer; layer <= end_layer;layer++){// this may produce an extra layer or 1 on top/bottom. Not entirely sure just yet.
+        point2 addMe = {0,0};
+        
+        if(layer*layer_height<=a.z)
+            addMe = {a.x,a.y};
+        if(layer*layer_height>=b.z)
+        
+            addMe = {b.x,b.y};
+        retMe.push_back(addMe);
+    }
+    
+    
+    
+    return retMe;
+}
+
 slice slice_mesh(const mesh& sliceMe, float layer_height){
     slice retMe;
     
@@ -98,14 +124,20 @@ slice slice_mesh(const mesh& sliceMe, float layer_height){
         t = t+offset;
         
         /** find first segment on triangle, then create them above every layer height. Need to workout the projection with the xy plane. **/
-        int start_layer = std::ceil(t.p[0].z/layer_height);// assuming we don't go above 2 billion layers.
-        int end_layer = std::floor(t.p[2].z/layer_height);
         
-        float start_height = start_layer*layer_height; // don't like this because you can end up below the triangle, but dealing with it for now.
+        std::vector<point2> L02 = yuh(t.p[0],t.p[2],layer_height);
+        std::vector<point2> L01 = yuh(t.p[0],t.p[1],layer_height);
+        std::vector<point2> L12 = yuh(t.p[1],t.p[2],layer_height);
         
-        for(int layer = start_layer; layer <= end_layer;layer++){// should be 2 for loops for 01->02 & 12->02 consecutively.
-            // clip between tri segments.
-        }
+        /* Pretty sure all of these can break. Only been able to trigger L01 so far.
+        assert(L02.size()!=0);
+        assert(L12.size()!=0);
+        assert(L01.size()!=0);//*/
+        
+        /// L02 sometimes is 1 less than L01 + L12 & sometimes equal to them.
+        if(L02.size()+1==L01.size()+L12.size())
+            L01.resize(L01.size()-1);
+        
     }
     
     return retMe;

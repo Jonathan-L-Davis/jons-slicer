@@ -19,7 +19,7 @@ struct mesh{
     vector offset;
 };
 
-struct slice{
+struct slice{// rethinking this struct. I want an intermediate struct for the layers vector & I want it to have fast look up for path segments. Going to be tricky. Needs a multimap & who knows what else.
     std::vector<std::vector<segment>> layers;
     float layer_height;
 };
