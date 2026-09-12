@@ -91,15 +91,25 @@ case "$OS" in
 esac
 
 
-# Required variables/parameters name, source files, exe or library (static or shared)
+# Parameters
+#   $1 = end binary name. REQUIRED
+#   $2 = name of array holding the source files. REQUIRED
+#
+# All other parameters are non-positional. They must come after the first 2 & are optional
+#
+#   ("EXECUTABLE"|"SHARED"|"STATIC") describes the type of binary to be built. Takes no arguments.
+#   "LINK_DIR" adds a link directory. Takes one argument, the link directory. Be mindful of spaces in paths.
+#   "LINK" adds a library to be linked. Takes one argument, the library.
 function build(){
     
     local Name="$1"
     local -n Source_Files=$2
     local BINARY_TYPE="EXECUTABLE"
     local INCLUDE_DIRS="$GLOBAL_INCLUDES"
-    local LINK_DIRS="$GLOBAL_LINK_DIRS"
-    local LINK_LIBS="$GLOBAL_LINK_LIBS"
+    local LINK_DIRS="" #"$GLOBAL_LINK_DIRS"
+    local LINK_DIRS_ARR=()
+    local LINK_LIBS="" #"$GLOBAL_LINK_LIBS"
+    local LINK_LIBS_ARR=()
     shift 2;
     
     while test $# -gt 0; do
@@ -112,11 +122,11 @@ function build(){
                 shift 1;
             ;;
             "LINK_DIR")
-                LINK_DIRS="$LINK_DIRS $2";
+                LINK_DIRS_ARR+=("$2");
                 shift 2;
             ;;
             "LINK")
-                LINK_LIBS="$LINK_LIBS $2";
+                LINK_LIBS_ARR+=("$2");
                 shift 2;
             ;;
             *)
@@ -125,6 +135,24 @@ function build(){
                 exit
             ;;
         esac
+    done
+    
+    # Manually dereference library names so I can call my core lib jons-slicer instead of libjons-slicer. 
+    for file in "${LINK_LIBS_ARR[@]}" ; do
+        for dir in "${LINK_DIRS_ARR[@]}" ; do
+            #echo "find \"${dir}\" -name \"${file}*\" -printf '%P\n' | grep \"${file}\\(\\.so\$\\|\\.a\$\\)\""
+            local LIB="$(find "${dir}" -name "${file}*" -printf '%P\n' | grep "${file}\\(\\.so\$\\|\\.a\$\\)")" # This will fail if there's both a static & dynamic lib. You could control for that by adding an optional flag to the LINK command which specifies. ( or add a LINK_STATIC & LINK_DYNAMIC
+            
+            if [[ "${LIB}" != "" ]] ; then
+                LINK_LIBS+=" ${NO_SYMLINK}${dir}/${LIB}"
+                break   
+            fi
+            
+        done
+    done
+    
+    for dir in "${LINK_DIRS_ARR[@]}" ; do
+        LINK_DIRS+=" -L${dir}"
     done
     
     local Object_Files=()
@@ -147,8 +175,8 @@ function build(){
     done
     
     
-    
     # link files into one executable
+    
     local file_glob=""
     for object in "${Object_Files[@]}" ; do
         file_glob+=" $object"
@@ -157,7 +185,8 @@ function build(){
     mkdir -p gen/
     case $BINARY_TYPE in
         "EXECUTABLE"|"SHARED")
-            zig c++ $file_glob -o "gen/${Name}" $LINK_DIRS $LINK_LIBS
+            #echo "zig c++ $file_glob -o "gen/${Name}" $LINK_DIRS $LINK_LIBS $RPATH"
+            zig c++ $file_glob -o "gen/${Name}" $LINK_DIRS $LINK_LIBS $RPATH
             ;;
         "STATIC")
             ar rcs gen/${Name}.a $file_glob
@@ -170,9 +199,8 @@ function build(){
     
 }
 
-build "libjons-slicer" Jons_Slicer_Core_Source STATIC
-
+build "jons-slicer" Jons_Slicer_Core_Source STATIC LINK_DIR lib/lib3mf/build LINK lib3mf
+    
 if [[ -n "$BUILD_TESTS" ]]; then
-    build "test" Test_Source EXECUTABLE LINK "-ljons-slicer" LINK_DIR "-Lgen"
+    build "test" Test_Source EXECUTABLE LINK jons-slicer LINK_DIR gen LINK_DIR lib/lib3mf/build LINK lib3mf
 fi
-

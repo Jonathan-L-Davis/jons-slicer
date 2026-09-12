@@ -22,10 +22,11 @@ int main(int argc, char** argv){
     }
     
     std::vector<mesh> meshes;
-    if(argc>=2)
-        load(argv[1],meshes);
     
-    std::cout << "File '" << argv[1] << "' contains "<< meshes.size() << " meshes.\n";
+    if(argc>=2){
+        load(argv[1],meshes);
+        std::cout << "File '" << argv[1] << "' contains "<< meshes.size() << " meshes.\n";
+    }
     
     for(mesh M:meshes)
         slice_mesh(M,1);

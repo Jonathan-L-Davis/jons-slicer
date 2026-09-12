@@ -100,7 +100,7 @@ std::vector<point2> yuh(point a, point b, float layer_height){
     vector ba = b-a;
     
     for(int layer = start_layer; layer <= end_layer;layer++){// this may produce an extra layer or 1 on top/bottom. Not entirely sure just yet.
-        point2 addMe = {0,0};
+        point2 addMe = {0,0};// need to add more vector ops for here.
         
         if(layer*layer_height<=a.z)
             addMe = {a.x,a.y};
