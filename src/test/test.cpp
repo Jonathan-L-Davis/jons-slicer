@@ -7,12 +7,13 @@
 bool test_epsilon(){
     bool retMe;
     
+    // endianness is questionably a problem here. (should only affect a platform where float's & int's have different endianness).
     for(uint32_t i = 0; i < 0x7F'7F'FF'FF; i++ ){
         float x = *(float*)(void*)&i;// shorter than the union type pun. Ideally compiles to just a load instruction.
         float eps1 = epsilon(x);
         float eps2 = epsilon(eps1);
         
-        if(x==x+eps1){
+        if(x==x+eps1){// the epsilon must be noticeable when added.
             std::cout << "Case 1 failure\n\n";
             float temp = x+(eps1);
             float temp2 = eps1-eps2;

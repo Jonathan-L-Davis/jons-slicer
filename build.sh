@@ -17,7 +17,7 @@ function build_lib3mf(){
     cd lib/lib3mf/
     git submodule update --init --recursive --force # recursive is not necessary at time of writing. Doesn't need to be conditional because it does nothing if it's already initialized. --force makes sure we're on coherent commits.
     cd cmake
-    bash ./GenerateMake.sh -DLIB3MF_TESTS=OFF
+    bash ./GenerateMake.sh -DLIB3MF_TESTS=OFF -DCMAKE_INSTALL_RPATH="\\\$ORIGIN"
     cd ../build/
     make
     
@@ -33,7 +33,7 @@ function build_clipper2(){
     cd CPP
     mkdir build
     cd build
-    cmake .. -DCLIPPER2_TESTS=OFF -DCLIPPER2_EXAMPLES=OFF # -DBUILD_SHARED_LIBS=ON # uncomment to make shared library instead.
+    cmake .. -DCLIPPER2_TESTS=OFF -DCLIPPER2_EXAMPLES=OFF -DCMAKE_INSTALL_RPATH="\\\$ORIGIN" # -DBUILD_SHARED_LIBS=ON # uncomment to make shared library instead.
     cmake --build . --config Release
     
     cd $repo_root_dir

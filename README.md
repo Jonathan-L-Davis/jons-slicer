@@ -6,13 +6,14 @@ The plan is to build a slicer core lib that can be built as a static or dynamic 
 
 Also planning to make a plugin framework for modifying the workflow of slicing by 3rd parties easier.
 
+The plugin framework has to start with version negotiation & then feature negotiation. That makes it more robust as opposed to just crashing on mismatched versions. C linkage for the version & feature coordination.
+
 ## Building
-Run the ./build.sh script from the repo root directory. It should automatically initialize repositories & build dependencies.
+Run the ./build.sh script from the repo root directory. It should automatically initialize repositories, build dependencies, & build tests.
 
-    ./build.sh --build-deps
+    ./build.sh --build-deps --build-tests
 
-Will build all dependencies & the main library.
-If you are building for the first time, expect it to take a long time for the script to pull the submodules & build them.
+If you are building for the first time, expect it to take a long time for the script to pull the submodules & build them. The slicer builds extremely quickly right now since it's so small.
 
 ## Licensing
 All my code is MIT because I strongly prefer that license.

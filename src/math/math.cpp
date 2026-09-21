@@ -4,6 +4,18 @@ float inf = INFINITY;
 
 
 
+bool operator == (point a, point b){
+    return  a.x==b.x &&
+            a.y==b.y &&
+            a.z==b.z;
+}
+
+bool operator == (vector a, vector b){
+    return  a.x==b.x &&
+            a.y==b.y &&
+            a.z==b.z;
+}
+
 point operator + (point a, vector b){
     a.x += b.x;
     a.y += b.y;
@@ -17,6 +29,10 @@ point operator + (vector a, point b){
 
 vector operator - (point a, point b){
     return {a.x-b.x,a.y-b.y,a.z-b.z};
+}
+
+vector operator * (float y, vector x){
+    return { y*x.x, y*x.y, y*x.z};
 }
 
 vector cross(vector a, vector b){// should double check when I'm not tired.

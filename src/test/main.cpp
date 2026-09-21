@@ -29,7 +29,7 @@ int main(int argc, char** argv){
     }
     
     for(mesh M:meshes)
-        slice_mesh(M,1);
+        slice_mesh(M,2.5);
     
     
     return 0;
